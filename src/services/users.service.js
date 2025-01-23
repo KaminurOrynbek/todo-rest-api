@@ -1,15 +1,16 @@
-const users = [];
+const User = require('../models/user.model');
 
 async function createUser(email, password, firstName, lastName) {
-  users.push({ email, password, firstName, lastName }); 
+  const user = new User({ email, password, firstName, lastName });
+  await user.save();
 }
 
 async function findUserByEmail(email) {
-  return users.find((user) => user.email === email);
+  return User.findOne({ email });
 }
 
 function getAllUsers() {
-  return users;
+  return User.find();
 }
 
 module.exports = { createUser, findUserByEmail, getAllUsers };

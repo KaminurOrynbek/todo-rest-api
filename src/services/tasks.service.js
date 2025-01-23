@@ -1,45 +1,47 @@
-const tasks = []; 
+const Task = require('../models/task.model');
 
 async function addTask(user, title, description) {
-  if (tasks.find((task) => task.user === user && task.title === title)) {
+  const existingTask = await Task.findOne({ user, title });
+  if (existingTask) {
     throw new Error('Task with this title already exists');
   }
-  tasks.push({ user, title, description, done: false });
+  const task = new Task({ user, title, description });
+  await task.save();
 }
 
 async function getTasks(user) {
-  return tasks.filter((task) => task.user === user && !task.done);
+  return Task.find({ user, done: false });
 }
 
 async function getCompletedTasks(user) {
-  return tasks.filter((task) => task.user === user && task.done);
+  return Task.find({ user, done: true });
 }
 
 async function markTaskAsDone(user, title) {
-  const task = tasks.find((task) => task.user === user && task.title === title);
+  const task = await Task.findOne({ user, title });
   if (!task) {
     throw new Error('Task not found');
   }
   task.done = true;
+  await task.save();
 }
 
 async function updateTask(user, taskTitle, newTitle, newDescription) {
-  const task = tasks.find((task) => task.user === user && task.title === taskTitle);
+  const task = await Task.findOne({ user, title: taskTitle });
   if (!task) {
     throw new Error('Task not found');
   }
-  if (tasks.find((task) => task.user === user && task.title === newTitle && task.title !== taskTitle)) {
+  const existingTask = await Task.findOne({ user, title: newTitle });
+  if (existingTask && existingTask._id.toString() !== task._id.toString()) {
     throw new Error('A task with the new title already exists');
   }
   task.title = newTitle;
   task.description = newDescription;
+  await task.save();
 }
 
 async function deleteTask(user, title) {
-  const index = tasks.findIndex((task) => task.user === user && task.title === title);
-  if (index !== -1) {
-    tasks.splice(index, 1);
-  }
+  await Task.deleteOne({ user, title });
 }
 
 module.exports = {
